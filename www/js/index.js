@@ -47,11 +47,11 @@ var app = {
     console.log('Received Event: ' + id);
     
     window.resolveLocalFileSystemURL(cordova.file.applicationDirectory + "www/index.html", this.gotFile, this.fail);
-  }
+  },
   fail: function(e) {
     console.log("FileSystem Error");
     console.dir(e);
-  }
+  },
   gotFile: function(fileEntry) {
     fileEntry.file(function(file) {
       var reader = new FileReader();
