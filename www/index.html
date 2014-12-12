@@ -1,47 +1,130 @@
-<!DOCTYPE html>
-<!--
-    Copyright (c) 2012-2014 Adobe Systems Incorporated. All rights reserved.
-
-    Licensed to the Apache Software Foundation (ASF) under one
-    or more contributor license agreements.  See the NOTICE file
-    distributed with this work for additional information
-    regarding copyright ownership.  The ASF licenses this file
-    to you under the Apache License, Version 2.0 (the
-    "License"); you may not use this file except in compliance
-    with the License.  You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-    Unless required by applicable law or agreed to in writing,
-    software distributed under the License is distributed on an
-    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-     KIND, either express or implied.  See the License for the
-    specific language governing permissions and limitations
-    under the License.
--->
+<!doctype html>
 <html>
-    <head>
-        <meta charset="utf-8" />
-        <meta name="format-detection" content="telephone=no" />
-        <meta name="msapplication-tap-highlight" content="no" />
-        <!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 -->
-        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
-        <link rel="stylesheet" type="text/css" href="css/index.css" />
-        <title>Hello World</title>
-    </head>
-    <body>
-        <div class="app">
-            <h1>PhoneGap</h1>
-            <div id="deviceready" class="blink">
-                <p class="event listening">Connecting to Device</p>
-                <p class="event received">Device is Ready</p>
-            </div>
-            <div id="textArea"></div>
-        </div>
-        <script type="text/javascript" src="cordova.js"></script>
-        <script type="text/javascript" src="js/index.js"></script>
-        <script type="text/javascript">
-            app.initialize();
-        </script>
-    </body>
+  <head>
+    <script src='js/firebase.js'></script>
+    <script src='js/jquery.min.js'></script>
+  </head>
+  
+<body>
+
+<div>
+<h1>Hearing Test App</h1>
+
+<div>
+<h2>Patients</h2>
+<div id="patients-outer"></div>
+<div id="newPatientForm">
+  <input id="patientId" type="number" placeholder="patientId">
+  <input id="dob" type="date" placeholder="DOB">
+  <input id="gender" type="text" placeholder="Gender">
+  <input id="push-patient" type="button" value="New Patient">
+</div>
+</div>
+
+<div>
+<h2>Tests</h2>
+<div id="tests-outer"></div>
+<div id="newTestForm">
+  <input id="testDate" type="date" placeholder="Date">
+  <input id="testType" type="text" placeholder="Type">
+  <input id="testResult" type="text" placeholder="Result">
+  <input id="push-test" type="button" value="New Test">
+</div>
+</div>
+
+<script>
+var ref = new Firebase("https://blazing-inferno-2511.firebaseio.com/dev/");
+
+// Patients 
+var patientsRef = ref.child("patients");
+$('#push-patient').click(function (e) {
+  var patientId = $('#patientId').val();
+  var dob = $('#dob').val();
+  var gender = $('#gender').val();
+  patientsRef.push({patientId: patientId, dob: dob, gender: gender});
+  $('#patientId,#dob,#gender').val('');
+});
+
+// Attach an asynchronous callback to read the data at our patients reference
+patientsRef.on("child_added", function(snapshot) {
+  var p = snapshot.val();
+  displayNewPatient(snapshot.key(),p.patientId+', '+p.dob+', '+p.gender);
+  console.log("Patient added : "); console.log(p);
+});
+patientsRef.on("child_changed", function(snapshot) {
+  var p = snapshot.val();
+  displayUpdatedPatient(snapshot.key(),p.patientId+', '+p.dob+', '+p.gender);
+  console.log("Patient updated : "); console.log(p);
+});
+patientsRef.on("child_removed", function(snapshot) {
+  var p = snapshot.val();
+  displayRemovePatient(snapshot.key());
+  console.log("Patient removed : "); console.log(p);
+});
+patientsRef.on("child_moved", function(snapshot) {
+  var p = snapshot.val();
+  console.log("Patient moved : "); console.log(p);
+});
+
+function displayNewPatient(id,text) {
+  $('<div id="'+id+'"/>').text(text).appendTo($('#patients-outer'));
+  $('#patients-outer')[0].scrollTop = $('#patients-outer')[0].scrollHeight;
+}
+function displayUpdatedPatient(id,text) {
+  $('#'+id).text(text);
+}
+function displayRemovePatient(id) {
+  $('#'+id).remove();
+}
+
+
+// Tests 
+var testsRef = ref.child("tests");
+$('#push-test').click(function (e) {
+  testsRef.push({
+    date: $('#testDate').val(),
+    type: $('#testType').val(),
+    result: $('#testResult').val()
+  });
+  $('#testDate,#testType,#testResult').val('');
+});
+
+// Attach an asynchronous callback to read the data at our test reference
+testsRef.on("child_added", function(snapshot) {
+  var t = snapshot.val();
+  displayNewTest(snapshot.key(),t.date+', '+t.type+', '+t.result);
+  console.log("Test added : "); console.log(t);
+});
+testsRef.on("child_changed", function(snapshot) {
+  var t = snapshot.val();
+  displayUpdatedTest(snapshot.key(),t.date+', '+t.type+', '+t.result);
+  console.log("Test updated : "); console.log(t);
+});
+testsRef.on("child_removed", function(snapshot) {
+  var t = snapshot.val();
+  displayRemoveTest(snapshot.key());
+  console.log("Test removed : "); console.log(t);
+});
+testsRef.on("child_moved", function(snapshot) {
+  var t = snapshot.val();
+  console.log("Test moved : "); console.log(t);
+});
+
+function displayNewTest(id,text) {
+  $('<div id="'+id+'"/>').text(text).appendTo($('#tests-outer'));
+  $('#tests-outer')[0].scrollTop = $('#tests-outer')[0].scrollHeight;
+}
+function displayUpdatedTest(id,text) {
+  $('#'+id).text(text);
+}
+function displayRemoveTest(id) {
+  $('#'+id).remove();
+}
+
+// Querying Data
+
+
+</script>
+</body>
+  
 </html>
